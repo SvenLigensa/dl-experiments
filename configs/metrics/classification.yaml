@@ -1,0 +1,3 @@
+# A dict of metric callables, instantiated and reported as val/<name>.
+accuracy:
+  _target_: src.metrics.Accuracy

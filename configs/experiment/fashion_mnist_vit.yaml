@@ -1,0 +1,16 @@
+# @package _global_
+# A complete experiment: a small ViT on FashionMNIST.
+# Run with:  python -m src.train +experiment=fashion_mnist_vit
+defaults:
+  - /metrics: classification
+  - override /model: vit
+  - override /data: fashion_mnist
+  - override /loss: cross_entropy
+
+trainer:
+  epochs: 5
+  amp: false
+  clip_grad: 1.0
+
+optimizer:
+  lr: 3e-4

@@ -1,0 +1,6 @@
+# Config-driven data location: env var DATA_DIR if set, else ./data.
+_target_: src.data.fashion_mnist.FashionMNISTData
+data_dir: ${oc.env:DATA_DIR,./data}
+batch_size: 128
+num_workers: 2
+download: true

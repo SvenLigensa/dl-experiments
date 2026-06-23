@@ -1,0 +1,11 @@
+# A small Vision Transformer (instantiated as src.models.vit.ViT(**this)).
+_target_: src.models.vit.ViT
+img_size: 28
+patch_size: 7
+in_chans: 1
+num_classes: 10
+embed_dim: 64
+depth: 4
+num_heads: 4
+mlp_ratio: 2.0
+dropout: 0.1
