@@ -31,13 +31,53 @@ files are meant to be **byte-identical on both branches**:
 - `pyproject.toml` — **identical except** `example` adds the `torchvision` dependency
   (the lone deliberate divergence; `uv.lock` follows from it)
 
-So whenever you change a framework file on `main`, port the identical change to `example`
-in the same unit of work — never let `example` fall behind. Verify with:
+### Workflow — `example` forks from `main` and stays ahead of it (ALWAYS follow this)
+
+`example` must always have `main`'s tip as an ancestor, holding **only** the task-delta
+commit on top. Keep it that way with one rule and one routine:
+
+- **Never commit framework changes on `example`.** Do all framework work on `main`. The
+  task files (`src/models/`, `src/data/`, `src/metrics.py`, `scripts/demo_determinism.py`,
+  the `configs/{model,data,loss,metrics,experiment}` entries, `docs/student_guide.md`,
+  and the `torchvision`/lockfile bump) are the *only* things that live on `example`.
+- **After every change to `main`, rebase `example` onto it** (in the same unit of work):
+
+  ```bash
+  git checkout main        # ... commit framework change ...
+  git checkout example && git rebase main
+  git push --force-with-lease origin example   # example was rewritten
+  ```
+
+  Conflicts only ever surface in `pyproject.toml` / `uv.lock`; resolve and `--continue`.
+
+This makes the "byte-identical framework" policy and the fork structure the same thing.
+
+### Verify parity (true framework diff — task paths excluded)
 
 ```bash
-git diff main..example -- src/ configs/{config.yaml,trainer,optimizer,scheduler} scripts/ tests/ docs/reproducibility.md
+# 1. example descends from main's tip
+git merge-base --is-ancestor main example && echo "ok: example is ahead of main"
+
+# 2. framework files are byte-identical (NOTE: must exclude the task paths, or the
+#    plain `git diff main..example -- src/ ...` will list the task additions as "drift")
+git diff --name-only main..example -- \
+  src/ scripts/ tests/ \
+  configs/config.yaml configs/trainer configs/optimizer configs/scheduler \
+  docs/reproducibility.md docs/extending.md \
+  ':(exclude)src/models' ':(exclude)src/data' ':(exclude)src/metrics.py' \
+  ':(exclude)scripts/demo_determinism.py'
 # expected output: empty
 ```
+
+Both checks are enforced automatically by the version-controlled `hooks/pre-push` whenever
+a push includes the `example` ref. Because `core.hooksPath` is a local git setting, enable
+it **once per clone**:
+
+```bash
+git config core.hooksPath hooks
+```
+
+Bypass only in emergencies with `git push --no-verify`.
 
 The branches are currently at full framework parity (reproducible-resume, `best.pth` +
 `ckpt_monitor` selection, `prune_checkpoints` retention, atomic checkpoint writes,

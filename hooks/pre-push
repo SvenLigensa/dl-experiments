@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# Enforce the branch invariant when pushing `example` (see CLAUDE.md "Branch policy"):
+#   1. `example` descends from `main`'s tip  -> example forks from / stays ahead of main
+#   2. framework files are byte-identical on both branches (task files excluded)
+#
+# This hook is version-controlled. Activate it once per clone with:
+#   git config core.hooksPath hooks
+#
+# Only fires when the push includes the `example` ref; pushing `main` alone is unaffected.
+# Bypass in a genuine emergency with `git push --no-verify`.
+set -euo pipefail
+
+# Task-only paths that are *allowed* to differ between the branches.
+TASK_EXCLUDES=(
+    ':(exclude)src/models'
+    ':(exclude)src/data'
+    ':(exclude)src/metrics.py'
+    ':(exclude)scripts/demo_determinism.py'
+)
+# Framework paths that must be identical on both branches.
+FRAMEWORK_PATHS=(
+    src/ scripts/ tests/
+    configs/config.yaml configs/trainer configs/optimizer configs/scheduler
+    docs/reproducibility.md docs/extending.md
+)
+
+pushing_example=0
+while read -r local_ref _local_sha _remote_ref _remote_sha; do
+    [ "${local_ref:-}" = "refs/heads/example" ] && pushing_example=1
+done
+
+[ "$pushing_example" -eq 0 ] && exit 0
+
+fail=0
+
+# 1. example must descend from main's tip.
+if ! git merge-base --is-ancestor main example; then
+    echo "pre-push: ERROR — 'example' does not descend from 'main's tip." >&2
+    echo "         Fix: git checkout example && git rebase main" >&2
+    fail=1
+fi
+
+# 2. framework files must be byte-identical (task files excluded).
+drift="$(git diff --name-only main..example -- "${FRAMEWORK_PATHS[@]}" "${TASK_EXCLUDES[@]}")"
+if [ -n "$drift" ]; then
+    echo "pre-push: ERROR — framework files differ between 'main' and 'example':" >&2
+    echo "$drift" | sed 's/^/             /' >&2
+    echo "         Framework files must be byte-identical; commit the change on 'main'" >&2
+    echo "         and rebase 'example' onto it instead of editing 'example' directly." >&2
+    fail=1
+fi
+
+exit "$fail"
