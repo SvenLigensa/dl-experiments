@@ -1,0 +1,4 @@
+# Instantiated as: CosineAnnealingLR(optimizer=..., T_max=epochs). Steps once per epoch.
+_target_: torch.optim.lr_scheduler.CosineAnnealingLR
+T_max: ${trainer.epochs}
+eta_min: 1e-6

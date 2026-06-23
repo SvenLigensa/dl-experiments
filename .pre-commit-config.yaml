@@ -1,0 +1,16 @@
+# All tooling is from Astral (ruff + ty) so nothing can disagree about formatting.
+#   ruff-check  = linter (bugs/anti-patterns) + import sorting (replaces isort)
+#   ruff-format = formatter (replaces black)
+#   ty          = static type checker (replaces mypy; beta, see pyproject [tool.ty])
+# With --fix, ruff-check must run *before* ruff-format (a fix may need reformatting).
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.18
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/astral-sh/ty-pre-commit
+    rev: v0.0.51
+    hooks:
+      - id: ty

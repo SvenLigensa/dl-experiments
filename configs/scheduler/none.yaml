@@ -1,0 +1,4 @@
+# A no-op scheduler (constant learning rate). Selecting `scheduler=none` keeps the LR fixed.
+_target_: torch.optim.lr_scheduler.ConstantLR
+factor: 1.0
+total_iters: 0

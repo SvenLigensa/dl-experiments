@@ -1,0 +1,33 @@
+# Top-level Hydra config. Selects one option from each config group below.
+#
+# model / data / loss default to `???` (mandatory-missing) because this branch
+# ships NO task. Provide them via an experiment config, e.g.:
+#   python -m src.train +experiment=fashion_mnist_vit      (on the `example` branch)
+# or by selecting groups directly:
+#   python -m src.train model=... data=... loss=...
+
+defaults:
+  - trainer: default
+  - optimizer: adamw
+  - scheduler: cosine
+  - model: ???
+  - data: ???
+  - loss: ???
+  - _self_
+
+# Experiment tracking (see src/tracking.py). Set sensible defaults here; override
+# per project. mode: online | offline | disabled
+tracking:
+  enabled: true
+  entity: null # your W&B entity (team/user); null uses the default
+  project: reproducible-dl
+  run_name: ${model._target_}_seed${trainer.seed}
+  mode: offline # offline is the portable default; switch to "online" to stream
+
+hydra:
+  run:
+    # Every run gets its own timestamped directory — the unit you share.
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}

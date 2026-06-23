@@ -1,0 +1,15 @@
+# Runtime / training-loop settings.
+seed: 42
+# deterministic=true opts into deterministic algorithms (slower, may raise on ops
+# without a deterministic kernel). See src/reproducibility.py for the honest caveats.
+deterministic: true
+epochs: 10
+device: auto # auto | cpu | cuda | cuda:0 | mps
+amp: false # automatic mixed precision (CUDA only)
+clip_grad: 0.0 # max grad norm; 0 disables
+auto_resume: true # resume from the latest checkpoint in the run dir if present
+print_freq: 50 # log every N steps
+# Checkpointing. Each epoch writes ckpt_epoch<N>.pth (atomically); old ones are pruned.
+ckpt_keep_last: 3 # keep the N most recent epoch checkpoints (0 = keep all)
+ckpt_monitor: val/loss # validation metric tracked for a separate best.pth
+ckpt_monitor_mode: min # min | max — which direction counts as "better"

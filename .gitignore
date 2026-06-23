@@ -1,0 +1,16 @@
+.vscode/
+.venv*/
+__pycache__/
+*.egg-info
+._*
+.DS_Store
+
+# Hydra run directories
+outputs/
+multirun/
+
+# Captured environments, datasets, local artifacts
+env_capture/
+/data/
+wandb/
+*.pth
